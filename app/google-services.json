@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "193304611804",
+    "firebase_url": "https://maptest0423-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "maptest0423",
+    "storage_bucket": "maptest0423.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:193304611804:android:83d57463b24a500bb5dd19",
+        "android_client_info": {
+          "package_name": "com.jaewook.android_kakaomap"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "193304611804-e0ol3e7l4o5kngb7qqvr042i091p06f7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jaewook.android_kakaomap",
+            "certificate_hash": "a8e19c5322d99d15315b98f07fa57f78c959f4d4"
+          }
+        },
+        {
+          "client_id": "193304611804-bhqcr9oh7avtmtmh0lobg3c5bjdfvlib.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCdvB8lJXtky0ezwuj9E7zdc4SJSAfS5uA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "193304611804-4815emjfj41p9rjt8o7auuoqifajnprt.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
