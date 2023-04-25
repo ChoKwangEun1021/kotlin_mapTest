@@ -14,12 +14,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:networkSecurityConfig="@xml/network_security_config"
-        android:theme="@style/Theme.Android_kakaomap">
+        android:theme="@style/Theme.Android_kakaomap"
+        android:usesCleartextTraffic="true">
 
         <!-- kakao Maps API -->
         <meta-data
             android:name="com.kakao.sdk.AppKey"
-            android:value="내API키" />
+            android:value="본인API키" />
 
         <activity
             android:name=".MainActivity"

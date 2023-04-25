@@ -17,11 +17,11 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         //카카오 api키
-        Properties properties = new Properties()
-        properties.load(project.rootProject.file("local.properties").newDataInputStream())
-        buildConfigField "String", "KAKAO_APP_KEY", "\"${properties.getProperty("KAKAO_APP_KEY")}\""
-        buildConfigField "String", "KAKAO_API_KEY", "\"${properties.getProperty("KAKAO_API_KEY")}\""
-        manifestPlaceholders = ["KAKAO_APP_KEY" : "\"${properties.getProperty("KAKAO_APP_KEY")}\""]
+//        Properties properties = new Properties()
+//        properties.load(project.rootProject.file("local.properties").newDataInputStream())
+//        buildConfigField "String", "KAKAO_APP_KEY", "\"${properties.getProperty("KAKAO_APP_KEY")}\""
+//        buildConfigField "String", "KAKAO_API_KEY", "\"${properties.getProperty("KAKAO_API_KEY")}\""
+//        manifestPlaceholders = ["KAKAO_APP_KEY" : "\"${properties.getProperty("KAKAO_APP_KEY")}\""]
     }
 
     buildTypes {
@@ -60,4 +60,6 @@ dependencies {
     //retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+
+    implementation 'com.github.hannesa2:AndroidSlidingUpPanel:4.2.1'
 }
