@@ -6,13 +6,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.LocationManager
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,12 +28,11 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
-class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnClickListener {
+class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnClickListener {// end of class
     companion object {
         const val BASE_URL = "https://dapi.kakao.com/"
-        const val API_KEY = "KakaoAK 본인API키"  // REST API 키
+        const val API_KEY = "KakaoAK APIKEY"  // REST API 키
     }
-
     lateinit var binding: ActivityMainBinding
     lateinit var mapView: MapView
     private val eventListener = MarkerEventListener(this)
@@ -41,14 +40,14 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
     private val listAdapter = ListAdapter(listItems)    // 리사이클러 뷰 어댑터
     private var pageNumber = 1      // 검색 페이지 번호
     private var keyword = ""        // 검색 키워드
-    private val ACCESS_FINE_LOCATION = 777 // Request Code
+    private val ACCESS_FINE_LOCATION = 1000 // Request Code
+    var trakingFlag = false
+    var uLatitude : Double? = null
+    var uLongitude : Double? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-//        val slidePanel = binding.mainFrame                      // SlidingUpPanel
-//        slidePanel.addPanelSlideListener(PanelEventListener())  // 이벤트 리스너 추가
 
         mapView = binding.mapView  // 카카오 지도 뷰
         mapView.setCalloutBalloonAdapter(CustomBalloonAdapter(layoutInflater))  // 커스텀 말풍선 등록
@@ -68,30 +67,16 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
         })
 
         // 검색 버튼
-        binding.btnSearch.setOnClickListener {
-            keyword = binding.etSearchField.text.toString()
-            pageNumber = 1
-            searchKeyword(keyword, pageNumber)
-        }
-
+        binding.btnSearch.setOnClickListener(this)
         // 이전 페이지 버튼
-        binding.btnPrevPage.setOnClickListener {
-            pageNumber--
-            binding.tvPageNumber.text = pageNumber.toString()
-            searchKeyword(keyword, pageNumber)
-        }
-
+        binding.btnPrevPage.setOnClickListener(this)
         // 다음 페이지 버튼
-        binding.btnNextPage.setOnClickListener {
-            pageNumber++
-            binding.tvPageNumber.text = pageNumber.toString()
-            searchKeyword(keyword, pageNumber)
-        }
-
-
+        binding.btnNextPage.setOnClickListener(this)
+        // 마커 추가 버튼
         binding.btnAddMaker.setOnClickListener(this)
+        // 내 위치 확인 버튼
         binding.btnTarget.setOnClickListener(this)
-    }
+    }// end of create
 
     // 위치 권한 확인
     private fun permissionCheck() {
@@ -129,9 +114,6 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
                     builder.show()
                 }
             }
-        } else {
-            // 권한이 있는 상태
-            startTracking()
         }
     }
 
@@ -159,7 +141,7 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
 
     // 위치추적 시작
     private fun startTracking() {
-        binding.mapView.currentLocationTrackingMode = MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading
+        binding.mapView.currentLocationTrackingMode = MapView.CurrentLocationTrackingMode.TrackingModeOnWithoutHeading  //이 부분
     }
 
     // 위치추적 중지
@@ -285,6 +267,9 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
         marker.setCustomImageAnchor(0.5f, 1.0f)    // 마커 이미지 기준점
         // 지도에 마커 추가
         mapView.addPOIItem(marker)
+        // 마커 하나 추가되면 바로 게시글 작성 엑티비티로 이동
+//        val intent = Intent(this, MainActivity2::class.java)
+//        startActivity(intent)
     }
 
     override fun onMapViewDoubleTapped(p0: MapView?, p1: MapPoint?) {}
@@ -306,12 +291,36 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
                 if (checkLocationService()) {
                     // GPS가 켜져있을 경우
                     permissionCheck()
+                    if(trakingFlag == false){
+                        Toast.makeText(applicationContext, "현재 위치 표시중", Toast.LENGTH_SHORT).show()
+                        startTracking()
+                        trakingFlag = true
+                    }else if(trakingFlag == true){
+                        Toast.makeText(applicationContext, "현재 위치 표시중이 아님", Toast.LENGTH_SHORT).show()
+                        stopTracking()
+                        trakingFlag = false
+                    }
                 } else {
                     // GPS가 꺼져있을 경우
                     Toast.makeText(this, "GPS를 켜주세요", Toast.LENGTH_SHORT).show()
                 }
             }
+            R.id.btn_search -> {
+                keyword = binding.etSearchField.text.toString()
+                pageNumber = 1
+                searchKeyword(keyword, pageNumber)
+            }
+            R.id.btn_prevPage -> {
+                pageNumber--
+                binding.tvPageNumber.text = pageNumber.toString()
+                searchKeyword(keyword, pageNumber)
+            }
+            R.id.btn_nextPage -> {
+                pageNumber++
+                binding.tvPageNumber.text = pageNumber.toString()
+                searchKeyword(keyword, pageNumber)
+            }
         }
     }
 
-}// end of class
+}
