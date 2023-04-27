@@ -1,6 +1,7 @@
 package com.jaewook.android_kakaomap
 
 import android.Manifest
+import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,6 +17,11 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
 import com.jaewook.android_kakaomap.data.KakaoAPI
 import com.jaewook.android_kakaomap.data.ResultSearchKeyword
 import com.jaewook.android_kakaomap.databinding.ActivityMainBinding
@@ -42,8 +48,7 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
     private var keyword = ""        // 검색 키워드
     private val ACCESS_FINE_LOCATION = 1000 // Request Code
     var trakingFlag = false
-    var uLatitude : Double? = null
-    var uLongitude : Double? = null
+    var isMarkerAdded = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -76,6 +81,40 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
         binding.btnAddMaker.setOnClickListener(this)
         // 내 위치 확인 버튼
         binding.btnTarget.setOnClickListener(this)
+
+        // 파이어베이스에서 마커 정보 가져오기
+        val database = Firebase.database.reference
+        val markersRef = database.child("markers")
+        markersRef.addListenerForSingleValueEvent(object: ValueEventListener{
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (markerSnapshot in snapshot.children) {
+                    val markerInfo = markerSnapshot.value as HashMap<String, Any>
+                    val name = markerInfo["name"] as String
+                    val latitude = markerInfo["latitude"] as Double
+                    val longitude = markerInfo["longitude"] as Double
+                    val image = markerInfo["image"] as String
+                    // 마커 생성
+                    val marker = MapPOIItem()
+                    marker.itemName = name
+                    marker.tag = 0
+                    marker.mapPoint = MapPoint.mapPointWithGeoCoord(latitude, longitude)
+                    marker.markerType = MapPOIItem.MarkerType.CustomImage          // 마커 모양 (커스텀)
+                    marker.customImageResourceId = resources.getIdentifier(image, "drawable", packageName)   // 커스텀 마커 이미지
+                    marker.selectedMarkerType = MapPOIItem.MarkerType.CustomImage  // 클릭 시 마커 모양 (커스텀)
+                    marker.customSelectedImageResourceId = resources.getIdentifier("blue_$image", "drawable", packageName)   // 클릭 시 커스텀 마커 이미지
+                    marker.isCustomImageAutoscale = false      // 커스텀 마커 이미지 크기 자동 조정
+                    marker.setCustomImageAnchor(0.5f, 1.0f)    // 마커 이미지 기준점
+                    // 지도에 마커 추가
+                    mapView.addPOIItem(marker)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e(TAG, "Failed to read value.", error.toException())
+            }
+
+        })
+
     }// end of create
 
     // 위치 권한 확인
@@ -254,6 +293,9 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
     override fun onMapViewZoomLevelChanged(p0: MapView?, p1: Int) {}
 
     override fun onMapViewSingleTapped(p0: MapView?, p1: MapPoint?) {
+        if (isMarkerAdded) { // 마커가 추가된 상태인 경우
+            return // 함수 종료
+        }
         // 마커 생성
         val marker = MapPOIItem()
         marker.itemName = "마커 이름"
@@ -267,9 +309,19 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
         marker.setCustomImageAnchor(0.5f, 1.0f)    // 마커 이미지 기준점
         // 지도에 마커 추가
         mapView.addPOIItem(marker)
+        isMarkerAdded = true // 마커 추가 상태로 변경
+        // 파이어베이스에 마커 정보 저장
+        val database = Firebase.database.reference
+        val markerRef = database.child("markers").push()
+        val markerInfo = HashMap<String, Any>()
+        markerInfo["name"] = "마커 이름"
+        markerInfo["latitude"] = p1?.mapPointGeoCoord!!.latitude
+        markerInfo["longitude"] = p1?.mapPointGeoCoord!!.longitude
+        markerInfo["image"] = "pin" // 마커 이미지 이름
+        markerRef.setValue(markerInfo)
         // 마커 하나 추가되면 바로 게시글 작성 엑티비티로 이동
-//        val intent = Intent(this, MainActivity2::class.java)
-//        startActivity(intent)
+        val intent = Intent(this, MainActivity2::class.java)
+        startActivity(intent)
     }
 
     override fun onMapViewDoubleTapped(p0: MapView?, p1: MapPoint?) {}
@@ -285,7 +337,9 @@ class MainActivity : AppCompatActivity(), MapView.MapViewEventListener, View.OnC
     override fun onClick(v: View?) {
         when(v?.id){
             R.id.btn_addMaker -> {
+                Toast.makeText(applicationContext, "원하는 위치를 터치해서 마커를 추가하세요", Toast.LENGTH_SHORT).show()
                 mapView.setMapViewEventListener(this)
+                isMarkerAdded = false // 버튼을 누를 때마다 마커 추가 가능하도록 상태 변경
             }
             R.id.btn_target -> {
                 if (checkLocationService()) {
